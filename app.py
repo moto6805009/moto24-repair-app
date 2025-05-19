@@ -30,7 +30,6 @@ if menu == "แจ้งซ่อม":
     problem = st.text_area("ปัญหา")
     reason = st.text_area("เหตุผล")
     contact = st.text_input("ช่องทางติดต่อกลับ")
-    image_links = st.text_area("แนบลิงก์รูปภาพ (ถ้ามี)", help="เช่น https://... หรือหลายลิงก์คั่นด้วย ,")
 
     if st.button("ส่งข้อมูล"):
         if name and branch and problem:
@@ -40,8 +39,7 @@ if menu == "แจ้งซ่อม":
                 "company": branch,
                 "problem": problem,
                 "reason": reason,
-                "contact": contact,
-                "img_urls": image_links
+                "contact": contact
             }
             result = post_json(payload)
             if result and result.get("status") == "success":
@@ -68,11 +66,6 @@ elif menu == "ตรวจสอบสถานะ":
                 f"วันที่แจ้ง: {result['date']}\n"
                 f"สถานะ: {result['status']}"
             )
-            if result.get("img_urls"):
-                st.markdown("---")
-                st.subheader("รูปภาพที่แนบมา:")
-                for url in result["img_urls"].split(","):
-                    st.image(url.strip(), use_column_width=True)
         else:
             st.warning("ไม่พบรหัสงานซ่อมนี้")
 
