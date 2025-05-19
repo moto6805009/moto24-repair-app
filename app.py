@@ -1,4 +1,3 @@
-
 import streamlit as st
 import requests
 
@@ -32,15 +31,15 @@ if menu == "แจ้งซ่อม":
     reason = st.text_area("เหตุผล")
     contact = st.text_input("ช่องทางติดต่อกลับ")
     if st.button("ส่งข้อมูล"):
-        if name and company and problem:
+        if name and branch and problem:
             payload = {
                 "action": "add",
                 "name": name,
-                "company": company,
+                "branch": branch,
                 "problem": problem,
                 "reason": reason,
                 "contact": contact,
-                "img_urls": ""  # ตัด img_urls ออก
+                "img_urls": ""  # ยังไม่รองรับภาพ
             }
             result = post_json(payload)
             if result and result.get("status") == "success":
@@ -60,7 +59,7 @@ elif menu == "ตรวจสอบสถานะ":
             st.info(
                 f"รหัส: {result['id']}\n"
                 f"ผู้แจ้ง: {result['name']}\n"
-                f"บริษัท: {result['company']}\n"
+                f"สาขา: {result['branch']}\n"
                 f"ปัญหา: {result['problem']}\n"
                 f"เหตุผล: {result['reason']}\n"
                 f"ติดต่อกลับ: {result['contact']}\n"
@@ -78,7 +77,7 @@ elif menu == "สำหรับแอดมิน":
         data = get_json(params={"action": "all"})
         if data:
             for row in reversed(data):
-                st.info(f"{row['id']} | {row['name']} | {row['company']} | สถานะ: {row['status']}")
+                st.info(f"{row['id']} | {row['name']} | {row['branch']} | สถานะ: {row['status']}")
             st.markdown("---")
             st.subheader("อัปเดตสถานะงานซ่อม")
             rid = st.text_input("รหัสงานซ่อม")
