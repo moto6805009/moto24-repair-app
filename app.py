@@ -1,120 +1,100 @@
 import streamlit as st
 import requests
+import datetime
 
-st.set_page_config(page_title="ระบบแจ้งซ่อม MOTO24", layout="centered")
+st.set_page_config(page_title="ระบบแจ้งซ่อม MOTO24", layout="wide")
+st.sidebar.title("เลือกเมนู")
+menu = st.sidebar.radio("", ["แจ้งซ่อม", "ตรวจสอบสถานะ", "สำหรับแอดมิน"])
 
-# ----------------------
-# CONFIG
-# ----------------------
 WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzd67eqgXFH_b82pnFrPsUlfgmPKto1mlp9rGgJUObVUqtx4cc0eDGFcBbbtmz4oMFnJg/exec"
-ADMIN_PASSWORD = "Admin123"
 
-# ----------------------
-# ฟังก์ชันสำหรับเชื่อม Webhook
-# ----------------------
-def post_json(payload):
-    try:
-        res = requests.post(WEBHOOK_URL, json=payload, timeout=10)
-        return res.json()
-    except:
-        return None
-
-def get_json(params=None):
-    try:
-        res = requests.get(WEBHOOK_URL, params=params, timeout=10)
-        return res.json()
-    except:
-        return None
-
-# ----------------------
-# UI
-# ----------------------
-st.title("🛠️ ระบบแจ้งซ่อม MOTO24")
-
-menu = st.sidebar.radio("เลือกเมนู", ["แจ้งซ่อม", "ตรวจสอบสถานะ", "สำหรับแอดมิน"])
-
-# ----------------------
-# 1. แจ้งซ่อม
-# ----------------------
 if menu == "แจ้งซ่อม":
-    st.subheader("📋 แบบฟอร์มแจ้งซ่อม")
+    st.header("📋 แบบฟอร์มแจ้งซ่อมอุปกรณ์")
     name = st.text_input("ชื่อผู้แจ้ง")
-    company = st.text_input("ชื่อบริษัท / สาขา")
-    problem = st.text_area("ปัญหาที่พบ")
-    reason = st.text_area("เหตุผล/สาเหตุ (ถ้ามี)")
+    issue = st.text_area("ปัญหาที่พบ")
+    cause = st.text_area("เหตุผล/สาเหตุ (ถ้ามี)", "")
     contact = st.text_input("ช่องทางติดต่อ (เบอร์/ไลน์)")
-    image_links = st.text_area("แนบลิงก์รูปภาพ (หากมี)", help="ใส่ลิงก์รูป Google Drive หรืออื่น ๆ")
+    image_url = st.text_area("แนบลิงก์รูปภาพ (หากมี)", help="สามารถวาง URL ของรูปภาพจาก Google Drive หรือเว็บไซต์อื่น")
 
     if st.button("ส่งข้อมูลแจ้งซ่อม"):
-        if name and company and problem and contact:
-            payload = {
-                "action": "create",
+        if name and issue and contact:
+            now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            data = {
+                "timestamp": now,
                 "name": name,
-                "company": company,
-                "problem": problem,
-                "reason": reason,
+                "issue": issue,
+                "cause": cause,
                 "contact": contact,
-                "image_links": image_links
+                "image_url": image_url,
+                "status": "รอดำเนินการ"
             }
-            result = post_json(payload)
-            if result and "id" in result:
-                st.success(f"ส่งข้อมูลเรียบร้อยแล้ว ✅\n\nรหัส: {result.get('id', '')}")
-            else:
-                st.error("เกิดข้อผิดพลาดในการส่งข้อมูล")
+            try:
+                res = requests.post(WEBHOOK_URL, json=data)
+                if res.status_code == 200:
+                    st.success("✅ ส่งข้อมูลเรียบร้อยแล้ว")
+                else:
+                    st.error("❌ เกิดข้อผิดพลาดในการส่งข้อมูล (Webhook Error)")
+            except Exception as e:
+                st.error(f"❌ เกิดข้อผิดพลาด: {e}")
         else:
-            st.warning("กรุณากรอกข้อมูลให้ครบถ้วน")
+            st.warning("⚠️ กรุณากรอกข้อมูลให้ครบถ้วน")
 
-# ----------------------
-# 2. ตรวจสอบสถานะ
-# ----------------------
 elif menu == "ตรวจสอบสถานะ":
-    st.subheader("🔍 ตรวจสอบสถานะงานซ่อม")
-    rid = st.text_input("กรอกรหัสงานซ่อมที่ได้รับ")
+    st.header("🔍 ตรวจสอบสถานะงานซ่อม")
+    code = st.text_input("กรอกรหัสงานซ่อม (เช่น Moto00001)")
     if st.button("ตรวจสอบ"):
-        if rid:
-            data = get_json(params={"action": "check", "id": rid})
-            if data and isinstance(data, dict):
-                st.success("พบข้อมูลงานซ่อม")
-                st.write(f"🔹 ชื่อผู้แจ้ง: {data.get('name', '-')}")
-                st.write(f"🏢 บริษัท: {data.get('company', '-')}")
-                st.write(f"🛠️ ปัญหา: {data.get('problem', '-')}")
-                st.write(f"📄 เหตุผล: {data.get('reason', '-')}")
-                st.write(f"📞 ติดต่อกลับ: {data.get('contact', '-')}")
-                st.write(f"📸 แนบรูป: {data.get('image_links', '-')}")
-                st.write(f"📌 สถานะล่าสุด: **{data.get('status', '-')}**")
-            else:
-                st.error("ไม่พบรหัสงานนี้")
-        else:
-            st.warning("กรุณากรอกรหัสงานซ่อม")
+        if code:
+            try:
+                res = requests.get(WEBHOOK_URL)
+                if res.status_code == 200:
+                    items = res.json().get("data", [])
+                    found = False
+                    for item in items:
+                        if item["code"] == code:
+                            st.success(f"📌 สถานะ: {item['status']}")
+                            st.info(f"ปัญหา: {item['issue']}
 
-# ----------------------
-# 3. แอดมิน
-# ----------------------
+ติดต่อ: {item['contact']}")
+                            if item.get("image_url"):
+                                st.image(item["image_url"], caption="แนบรูปภาพ", use_column_width=True)
+                            found = True
+                            break
+                    if not found:
+                        st.error("❌ ไม่พบรหัสงานซ่อมนี้")
+                else:
+                    st.error("❌ ไม่สามารถเชื่อมต่อข้อมูลได้")
+            except Exception as e:
+                st.error(f"❌ เกิดข้อผิดพลาด: {e}")
+
 elif menu == "สำหรับแอดมิน":
-    st.subheader("เข้าสู่ระบบแอดมิน")
+    st.header("🔐 เข้าสู่ระบบแอดมิน")
     password = st.text_input("รหัสผ่าน", type="password")
-    if password == ADMIN_PASSWORD:
+    if password == "Admin123":
         st.success("เข้าสู่ระบบสำเร็จ")
-
-        data = get_json(params={"action": "all"})
-        if data:
-            st.subheader("📄 รายการแจ้งซ่อมทั้งหมด")
-            for row in reversed(data):
-                rid = row.get('id', 'ไม่มีรหัส')
-                name = row.get('name', '-')
-                branch = row.get('branch', row.get('company', '-'))
-                status = row.get('status', '-')
-                st.info(f"{rid} | {name} | {branch} | สถานะ: {status}")
-
-        st.markdown("---")
-        st.subheader("🔄 อัปเดตสถานะงานซ่อม")
-        rid = st.text_input("รหัสงานซ่อม")
-        newstatus = st.selectbox("เลือกสถานะใหม่", ["รอดำเนินการ", "กำลังซ่อม", "เสร็จแล้ว", "ยกเลิก"])
-        if st.button("อัปเดตสถานะ"):
-            result = post_json({"action": "update", "id": rid, "status": newstatus})
-            if result and result.get("status") == "updated":
-                st.success("อัปเดตสถานะเรียบร้อยแล้ว")
+        try:
+            res = requests.get(WEBHOOK_URL)
+            if res.status_code == 200:
+                items = res.json().get("data", [])
+                for item in items:
+                    st.markdown("---")
+                    st.write(f"🆔 รหัส: {item['code']}")
+                    st.write(f"👤 ชื่อ: {item['name']}")
+                    st.write(f"📱 ติดต่อ: {item['contact']}")
+                    st.write(f"🛠 ปัญหา: {item['issue']}")
+                    st.write(f"📎 สถานะปัจจุบัน: `{item['status']}`")
+                    if item.get("image_url"):
+                        st.image(item["image_url"], width=300)
+                    new_status = st.selectbox(f"เปลี่ยนสถานะสำหรับ {item['code']}", ["รอดำเนินการ", "กำลังดำเนินการ", "เสร็จสิ้น", "ยกเลิก"], index=["รอดำเนินการ", "กำลังดำเนินการ", "เสร็จสิ้น", "ยกเลิก"].index(item["status"]))
+                    if st.button(f"อัปเดตสถานะ {item['code']}"):
+                        update_data = {"code": item["code"], "new_status": new_status}
+                        update_res = requests.post(WEBHOOK_URL, json=update_data)
+                        if update_res.status_code == 200:
+                            st.success("อัปเดตสถานะสำเร็จแล้ว")
+                        else:
+                            st.error("ไม่สามารถอัปเดตสถานะได้")
             else:
-                st.error("ไม่สามารถอัปเดตได้ หรือไม่พบรหัส")
+                st.error("❌ ไม่สามารถโหลดข้อมูลได้")
+        except Exception as e:
+            st.error(f"❌ เกิดข้อผิดพลาด: {e}")
     elif password:
         st.error("รหัสผ่านไม่ถูกต้อง")
