@@ -27,7 +27,7 @@ def get_json(params=None):
 if menu == "แจ้งซ่อม":
     st.subheader("แจ้งซ่อมอุปกรณ์")
     name = st.text_input("ชื่อผู้แจ้ง")
-    company = st.text_input("ชื่อบริษัท")
+    branch = st.text_input("สาขา")
     problem = st.text_area("ปัญหา")
     reason = st.text_area("เหตุผล")
     contact = st.text_input("ช่องทางติดต่อกลับ")
