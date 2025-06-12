@@ -1,2 +1,2 @@
-streamlit
+streamlit==13.1.2.5
 requests
