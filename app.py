@@ -1,17 +1,29 @@
 import streamlit as st
 import requests
 
-# ตั้งค่าระบบ
-WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzd67eqgXFH_b82pnFrPsUlfgmPKto1mlp9rGgJUObVUqtx4cc0eDGFcBbbtmz4oMFnJg/exec"
+# ตั้งค่าหน้าเว็บ
+st.set_page_config(page_title="ช่องทางการแจ้งปัญหาระบบและอุปกรณ์ IT", layout="centered")
+st.title("🖥️ ช่องทางการแจ้งปัญหาระบบและอุปกรณ์ IT")
+
+# ค่าคงที่
+WEBHOOK_URL = "https://script.google.com/macros/s/xxxxxxxxxxxx/exec"  # 🔧 แก้ URL ของคุณเอง
 ADMIN_PASSWORD = "Admin123"
 
-st.set_page_config(page_title="ระบบแจ้งซ่อม MOTO24", layout="centered")
-st.title("🔧 ระบบแจ้งซ่อม MOTO24")
+# รายชื่อสาขา (สามารถแก้เพิ่ม/ลดได้)
+branches = [
+    "01-สำนักงานใหญ่", "02-ระโนด1", "03-สิงหนคร", "04-สทิงพระ", "05-ระโนด2", "06-บ่อล้อ",
+    "07-หัวไทร", "08-ชะอวด", "09-ร่อนพิบูลย์", "10-หัวถนน", "11-ปากพนัง", "12-ลานสกา",
+    "13-ท่าศาลา", "14-ร่อนพิบูลย์24", "15-บ่อล้อ24", "16-ทุ่งใหญ่24", "17-จันดี",
+    "18-หัวไทร24", "19-สตูล24", "20-ฉลุง24", "21-ท่าแพ24", "22-ละงู24", "23-ชะอวด24",
+    "24-นบพิตำ24", "25-พิปูน24", "26-ปากพนัง24", "27-ควนกาหลง24", "28-สทิงพระ24",
+    "29-ระโนด24", "30-สิงหนคร24", "31-ท่าศาลา24", "32-รัตภูมิ 24", "33-หัวถนน24",
+    "34-คูขวาง", "35-ควนหิน", "36-ควนหิน24", "37-บ้านด่าน24", "38-ทุ่งใหญ่", "39-บ้านด่าน24"
+]
 
 # เมนู
-menu = st.sidebar.radio("📋 เลือกเมนู", ["แจ้งซ่อม", "ตรวจสอบสถานะ", "สำหรับแอดมิน"])
+menu = st.sidebar.radio("📋 เลือกเมนู", ["แจ้งปัญหา", "ตรวจสอบสถานะ", "สำหรับแอดมิน"])
 
-# ฟังก์ชันเชื่อม Webhook
+# เชื่อม Webhook
 def post_json(data):
     try:
         res = requests.post(WEBHOOK_URL, json=data)
@@ -26,39 +38,29 @@ def get_json(params=None):
     except:
         return None
 
-# รายชื่อสาขา
-branches = [
-    "01-สำนักงานใหญ่", "02-ระโนด1", "03-สิงหนคร", "04-สทิงพระ", "05-ระโนด2", "06-บ่อล้อ",
-    "07-หัวไทร", "08-ชะอวด", "09-ร่อนพิบูลย์", "10-หัวถนน", "11-ปากพนัง", "12-ลานสกา",
-    "13-ท่าศาลา", "14-ร่อนพิบูลย์24", "15-บ่อล้อ24", "16-ทุ่งใหญ่24", "17-จันดี",
-    "18-หัวไทร24", "19-สตูล24", "20-ฉลุง24", "21-ท่าแพ24", "22-ละงู24", "23-ชะอวด24",
-    "24-นบพิตำ24", "25-พิปูน24", "26-ปากพนัง24", "27-ควนกาหลง24", "28-สทิงพระ24",
-    "29-ระโนด24", "30-สิงหนคร24", "31-ท่าศาลา24", "32-รัตภูมิ 24", "33-หัวถนน24",
-    "34-คูขวาง", "35-ควนหิน", "36-ควนหิน24", "37-บ้านด่าน24", "38-ทุ่งใหญ่", "39-บ้านด่าน24"
-]
+# ---------- หน้าแจ้งปัญหา ----------
+if menu == "แจ้งปัญหา":
+    st.subheader("📝 ช่องทางการแจ้งปัญหาระบบและอุปกรณ์ IT")
 
-# ---------- หน้าแจ้งซ่อม ----------
-if menu == "แจ้งซ่อม":
-    st.subheader("📨 แจ้งซ่อมอุปกรณ์")
     name = st.text_input("👤 ชื่อผู้แจ้ง")
     branch = st.selectbox("🏢 เลือกสาขา", branches)
-    problem = st.text_area("❗ ปัญหาที่พบ")
-    reason = st.text_area("📌 เหตุผลเพิ่มเติม (ถ้ามี)")
+    topic = st.text_area("📌 หัวข้อ")
+    detail = st.text_area("🖊️ รายละเอียดเพิ่มเติม")
     contact = st.text_input("☎️ ช่องทางติดต่อกลับ")
 
     if st.button("✅ ส่งข้อมูล"):
-        if name and branch and problem:
+        if name and branch and topic:
             payload = {
                 "action": "add",
                 "name": name,
                 "company": branch,
-                "problem": problem,
-                "reason": reason,
+                "problem": topic,
+                "reason": detail,
                 "contact": contact
             }
             result = post_json(payload)
             if result and result.get("status") == "success":
-                st.success(f"🎉 แจ้งซ่อมสำเร็จ! รหัสของคุณคือ **{result['id']}**")
+                st.success(f"🎉 แจ้งปัญหาสำเร็จ! รหัสของคุณคือ **{result['id']}**")
             else:
                 st.error("❌ ไม่สามารถส่งข้อมูลได้ กรุณาลองใหม่")
         else:
@@ -66,26 +68,26 @@ if menu == "แจ้งซ่อม":
 
 # ---------- หน้าตรวจสอบสถานะ ----------
 elif menu == "ตรวจสอบสถานะ":
-    st.subheader("🔎 ตรวจสอบสถานะงานซ่อม")
-    code = st.text_input("กรอกรหัสงานซ่อม (เช่น Moto00001)")
-    if st.button("📥 เช็คสถานะ"):
+    st.subheader("🔎 ตรวจสอบสถานะปัญหา")
+    code = st.text_input("กรอกรหัสการแจ้ง (เช่น Moto00001)")
+    if st.button("📥 ตรวจสอบ"):
         result = get_json(params={"action": "check", "id": code})
         if result and result.get("id"):
-            st.success("✅ พบข้อมูลของรหัสงานซ่อมนี้แล้ว")
+            st.success("✅ พบข้อมูลของรหัสนี้แล้ว")
             st.info(
-                f"🔧 รหัส: {result['id']}\n"
+                f"🧾 รหัส: {result['id']}\n"
                 f"👤 ผู้แจ้ง: {result['name']}\n"
                 f"🏢 สาขา: {result['company']}\n"
-                f"❗ ปัญหา: {result['problem']}\n"
-                f"📌 เหตุผล: {result['reason']}\n"
+                f"📌 หัวข้อ: {result['problem']}\n"
+                f"🖊️ รายละเอียด: {result['reason']}\n"
                 f"☎️ ติดต่อกลับ: {result['contact']}\n"
                 f"🕒 วันที่แจ้ง: {result['date']}\n"
                 f"📊 สถานะ: {result['status']}"
             )
         else:
-            st.warning("❗ ไม่พบรหัสงานซ่อมนี้")
+            st.warning("❗ ไม่พบรหัสนี้ในระบบ")
 
-# ---------- หน้าแอดมิน ----------
+# ---------- หน้าผู้ดูแลระบบ ----------
 elif menu == "สำหรับแอดมิน":
     st.subheader("🔐 เข้าสู่ระบบแอดมิน")
     password = st.text_input("รหัสผ่าน", type="password")
@@ -98,9 +100,9 @@ elif menu == "สำหรับแอดมิน":
                     f"{row['id']} | {row['name']} | สาขา: {row['company']} | สถานะ: {row['status']}"
                 )
             st.markdown("---")
-            st.subheader("🛠 อัปเดตสถานะงานซ่อม")
-            rid = st.text_input("รหัสงานซ่อม")
-            newstatus = st.selectbox("เลือกสถานะใหม่", ["รอดำเนินการ", "กำลังซ่อม", "เสร็จแล้ว", "ยกเลิก"])
+            st.subheader("🛠 อัปเดตสถานะการแจ้ง")
+            rid = st.text_input("รหัสการแจ้ง")
+            newstatus = st.selectbox("เลือกสถานะใหม่", ["รอดำเนินการ", "กำลังดำเนินการ", "เสร็จแล้ว", "ยกเลิก"])
             if st.button("📤 อัปเดตสถานะ"):
                 result = post_json({"action": "update", "id": rid, "status": newstatus})
                 if result and result.get("status") == "updated":
