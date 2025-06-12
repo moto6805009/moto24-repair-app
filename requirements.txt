@@ -1,2 +1,2 @@
-streamlit
+streamlit==132.1.225
 requests
