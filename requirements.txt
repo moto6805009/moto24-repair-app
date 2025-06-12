@@ -1,2 +1,2 @@
-streamlit==132.1.1.1
+streamlit
 requests
